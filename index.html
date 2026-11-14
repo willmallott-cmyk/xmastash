@@ -138,6 +138,21 @@ button.fb{cursor:pointer}
 .tile .cic svg{width:80%;height:80%}
 .ico.cic{border:0;background:radial-gradient(circle at 30% 22%,#f7f8f6,#cdd5cf);box-shadow:0 6px 14px rgba(0,0,0,.3)}
 .ico.cic svg{width:46px;height:46px;fill:none;stroke:none}
+.tabs button{font-size:10.5px}
+.tabs button svg{width:21px;height:21px}
+form.wf{background:none;border:0;box-shadow:none;padding:14px 0 0;margin:0;display:flex;gap:8px}
+form.wf input{flex:1}
+form.wf .add{padding:0 20px;flex:none}
+.wi{display:flex;align-items:center;gap:10px;background:var(--bg2);border:1px solid var(--line);border-radius:12px;padding:6px 8px 6px 12px;margin-top:10px}
+.wt{flex:1;min-width:0;display:flex;align-items:center;gap:12px;text-align:left;background:none;border:0;padding:8px 0;font:inherit;color:inherit;cursor:pointer}
+.wt span:last-child{min-width:0;overflow-wrap:anywhere}
+.wk{width:24px;height:24px;border-radius:8px;border:2px solid var(--mute);flex:none;display:grid;place-items:center}
+.wi.done .wk{background:var(--acc);border-color:var(--acc);color:var(--accfg)}
+.wi.done .wt span:last-child{text-decoration:line-through;color:var(--mute)}
+.wk svg{width:14px;height:14px}
+.tiles .tile:last-child:nth-child(odd){grid-column:1/-1;justify-self:center;width:calc(50% - 7px)}
+.tabs button{font-size:10px;letter-spacing:-.01em}
+.tabs .in{gap:0}
 </style>
 </head>
 <body>
@@ -167,6 +182,11 @@ button.fb{cursor:pointer}
 <div class="smsg" id="smsg" role="status"></div>
 
 <div id="list"></div>
+<section id="wishes" hidden>
+<div class="box open"><div class="bh"><span class="ico line" aria-hidden="true"><svg viewBox="0 0 24 24"><rect x="4" y="10" width="16" height="10" rx="1.5"/><path d="M12 10v10M3 10h18V7H3zM12 7c-2-3.5-5.5-2.5-4.5-.3M12 7c2-3.5 5.5-2.5 4.5-.3"/></svg></span><span class="h2">Wish list</span><span class="cnt" id="wcnt"></span></div>
+<div class="bb"><form id="wf" class="wf"><input id="wtext" required maxlength="100" placeholder="e.g. Fairy lights" aria-label="Wish list item"><button class="add" type="submit">Add</button></form>
+<div id="wlist"></div></div></div>
+</section>
 <section id="settings" hidden>
 <div class="box open"><div class="bh"><span class="ico line" aria-hidden="true"><svg viewBox="0 0 24 24"><path d="M12 4v11M7 11l5 5 5-5M5 20h14"/></svg></span><span class="h2">Backup</span></div>
 <div class="bb"><p>Your list is saved in this browser only. Download a backup to keep a copy, or to move your list to another phone or computer. On iPhone, choose <b>Save to Files</b> in the share sheet that appears.</p>
@@ -188,10 +208,13 @@ button.fb{cursor:pointer}
 </div>
 </div>
 <script>
-const CATS=["Snacks","Treats","Alcohol & drinks","Big Xmas dinner"];
+const CATS=["Snacks","Treats","Alcohol & drinks","Big Xmas dinner","Desserts"];
 const DUP='<svg viewBox="0 0 24 24"><rect x="9" y="9" width="11" height="11" rx="2"/><path d="M5 15V6a2 2 0 0 1 2-2h9"/></svg>';
 const TRASH='<svg viewBox="0 0 24 24"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg>';
 const KEY="xmas:items";
+let wish=[];try{wish=JSON.parse(localStorage.getItem("xmas:wish")||"[]")}catch(e){}
+const saveW=()=>{try{localStorage.setItem("xmas:wish",JSON.stringify(wish))}catch(e){}};
+const CHECK='<svg viewBox="0 0 24 24" aria-hidden="true"><path d="M5 12.5l4.5 4.5L19 7.5" stroke-width="3.2"/></svg>';
 let items=[],tab="All",focusId=null;
 try{items=JSON.parse(localStorage.getItem(KEY)||"[]")}catch(e){items=[]}
 const save=()=>{try{localStorage.setItem(KEY,JSON.stringify(items))}catch(e){}};
@@ -218,9 +241,11 @@ const TABS=[
 ["Treats","Treats",'<circle cx="12" cy="12" r="4.5"/><path d="M7.5 12L3 9v6zM16.5 12L21 9v6z"/>'],
 ["Alcohol & drinks","Drinks",'<path d="M7 3h10v5a5 5 0 0 1-10 0z"/><path d="M12 13v7M8 21h8"/>'],
 ["Big Xmas dinner","Dinner",'<path d="M4 17a8 8 0 0 1 16 0z"/><path d="M3 20h18M12 6V4"/>'],
+["Desserts","Desserts",'<path d="M4 20h16v-6H4z"/><path d="M4 14c0-3 2-4 4-4h8c2 0 4 1 4 4"/><path d="M12 10V7M12 7c-1-1.5 1-2 0-3.5"/>'],
+["Wish","Wishlist",'<rect x="4" y="10" width="16" height="10" rx="1.5"/><path d="M12 10v10M3 10h18V7H3zM12 7c-2-3.5-5.5-2.5-4.5-.3M12 7c2-3.5 5.5-2.5 4.5-.3"/>'],
 ["Settings","Settings",'<circle cx="12" cy="12" r="3"/><path d="M12 3v2.5M12 18.5V21M3 12h2.5M18.5 12H21M5.6 5.6l1.8 1.8M16.6 16.6l1.8 1.8M5.6 18.4l1.8-1.8M16.6 7.4l1.8-1.8"/>']];
 const SHORT={"Alcohol & drinks":"Drinks","Big Xmas dinner":"Dinner"};
-const IMG={"Snacks":"cat-snacks.png?v=1","Treats":"cat-treats.png?v=1","Alcohol & drinks":"cat-drinks.png?v=1","Big Xmas dinner":"cat-dinner.png?v=1"};
+const IMG={"Snacks":"cat-snacks.png?v=1","Treats":"cat-treats.png?v=1","Alcohol & drinks":"cat-drinks.png?v=1","Big Xmas dinner":"cat-dinner.png?v=1","Desserts":"cat-desserts.png?v=1"};
 const icon=c=>`<img class="ico" src="${IMG[c]}" alt="" width="62" height="62">`;
 const card=i=>{const n=days(i.exp),s=status(n),nm=esc(i.name);
   return `<article class="item ${s}"><div class="top"><span class="name">${nm}</span><span class="tag">${label(n)}</span></div>
@@ -228,14 +253,20 @@ const card=i=>{const n=days(i.exp),s=status(n),nm=esc(i.name);
   <div class="acts"><button class="ib" data-dup="${i.id}" aria-label="Duplicate ${nm}" title="Duplicate">${DUP}</button>
   <button class="ib del" data-del="${i.id}" aria-label="Delete ${nm}" title="Delete">${TRASH}</button></div></div></article>`};
 
+function renderWish(){
+  $("wcnt").textContent=wish.length?`${wish.filter(w=>!w.done).length} to get`:"";
+  $("wlist").innerHTML=wish.length?wish.map(w=>`<div class="wi${w.done?" done":""}"><button type="button" class="wt" data-wt="${w.id}" aria-pressed="${!!w.done}"><span class="wk">${w.done?CHECK:""}</span><span>${esc(w.text)}</span></button><button type="button" class="ib del" data-wd="${w.id}" aria-label="Delete ${esc(w.text)}" title="Delete">${TRASH}</button></div>`).join(""):`<div class="empty">Nothing on your list yet.</div>`}
+$("wf").onsubmit=e=>{e.preventDefault();const t=$("wtext").value.trim();if(!t)return;
+  wish.push({id:Date.now()+Math.random(),text:t.slice(0,100),done:false});saveW();$("wtext").value="";$("wtext").focus();renderWish()};
 function render(){
   {const t0=today();let xm=new Date(t0.getFullYear(),11,25);if(xm<t0)xm=new Date(t0.getFullYear()+1,11,25);
    const dd=Math.round((xm-t0)/864e5);$("sub").textContent=dd===0?"Merry Christmas! Check what's left in the store.":`${dd} day${dd===1?"":"s"} to Christmas. Track what's stored and when it expires.`}
-  const isSet=tab==="Settings",isCat=CATS.includes(tab),isHome=tab==="All";
-  $("flag").hidden=$("f").hidden=$("smsg").hidden=isSet;
-  $("tiles").hidden=!isHome;$("list").hidden=!isCat;$("settings").hidden=!isSet;
+  const isSet=tab==="Settings",isCat=CATS.includes(tab),isHome=tab==="All",isWish=tab==="Wish";
+  $("flag").hidden=$("f").hidden=$("smsg").hidden=isSet||isWish;
+  $("tiles").hidden=!isHome;$("list").hidden=!isCat;$("settings").hidden=!isSet;$("wishes").hidden=!isWish;
   $("tabin").innerHTML=TABS.map(([k,l,p])=>`<button type="button" data-tab="${esc(k)}"${k===tab?' aria-current="page"':""}><svg viewBox="0 0 24 24" aria-hidden="true">${p}</svg><span>${l}</span></button>`).join("");
   if(isSet)return;
+  if(isWish){renderWish();return}
   $("tiles").innerHTML=CATS.map(c=>{const mine=items.filter(i=>i.cat===c),d=mine.filter(i=>days(i.exp)<=30).length;
     return `<button type="button" class="tile" data-tab="${esc(c)}"><img src="${IMG[c]}" alt=""><span class="tn">${c}</span><span class="tc">${mine.length} item${mine.length===1?"":"s"}${d?`<b>${d} due</b>`:""}</span></button>`}).join("");
   const scope=isCat?items.filter(i=>i.cat===tab):items;
@@ -259,6 +290,8 @@ function render(){
   if(focusId){const el=document.querySelector(`.ed[data-id="${focusId}"]`);if(el){el.focus();el.scrollIntoView({block:"center"})}focusId=null}
 }
 document.addEventListener("click",e=>{
+  const wt=e.target.closest("[data-wt]");if(wt){const w=wish.find(x=>String(x.id)===wt.dataset.wt);if(w){w.done=!w.done;saveW();renderWish()}return}
+  const wd=e.target.closest("[data-wd]");if(wd){wish=wish.filter(x=>String(x.id)!==wd.dataset.wd);saveW();renderWish();return}
   const tb=e.target.closest("[data-tab]");if(tb){tab=tb.dataset.tab;if(CATS.includes(tab))$("cat").value=tab;render();window.scrollTo({top:0});return}
   const bh=e.target.closest("[data-cat]");if(bh){const k=bh.dataset.cat;openCats.has(k)?openCats.delete(k):openCats.add(k);saveOpen();render();return}
   const gh=e.target.closest("[data-g]");if(gh){const k=gh.dataset.g;openGrp.has(k)?openGrp.delete(k):openGrp.add(k);render();return}
@@ -269,7 +302,7 @@ document.addEventListener("change",e=>{if(e.target.classList.contains("ed")&&e.t
 const say=t=>{$("msg").textContent=t;setTimeout(()=>{$("msg").textContent=""},6000)};
 $("dl").onclick=async()=>{
   const name=`xmas-backup-${new Date().toISOString().slice(0,10)}.json`;
-  const text=JSON.stringify({app:"xmas-storage",exported:new Date().toISOString(),items},null,2);
+  const text=JSON.stringify({app:"xmas-storage",exported:new Date().toISOString(),items,wish},null,2);
   const done=()=>say(`Backup saved (${items.length} item${items.length===1?"":"s"}).`);
   const file=new File([text],name,{type:"application/json"});
   if(window.showSaveFilePicker){
@@ -289,9 +322,11 @@ $("file").onchange=async e=>{const f=e.target.files[0];e.target.value="";if(!f)r
     if(!Array.isArray(list))throw 0;
     const ok=list.filter(i=>i&&typeof i.name==="string"&&CATS.includes(i.cat)&&/^\d{4}-\d{2}-\d{2}$/.test(i.exp))
       .map(i=>({id:Date.now()+Math.random(),name:i.name.slice(0,80),cat:i.cat,exp:i.exp}));
-    if(!ok.length){say("No valid items found in that file.");return}
-    if(!confirm(`Replace your current list (${items.length}) with ${ok.length} item${ok.length===1?"":"s"} from this backup?`))return;
-    items=ok;save();render();say(`Restored ${ok.length} item${ok.length===1?"":"s"}.`);
+    const wl=data&&Array.isArray(data.wish)?data.wish.filter(w=>w&&typeof w.text==="string").map(w=>({id:Date.now()+Math.random(),text:w.text.slice(0,100),done:!!w.done})):null;
+    if(!ok.length&&!(wl&&wl.length)){say("No valid items found in that file.");return}
+    const wTxt=wl?` and your wish list (${wish.length}) with ${wl.length} wish${wl.length===1?"":"es"}`:"";
+    if(!confirm(`Replace your current stock (${items.length})${wTxt} with ${ok.length} stock item${ok.length===1?"":"s"} from this backup?`))return;
+    items=ok;save();if(wl){wish=wl;saveW()}render();say(`Restored ${ok.length} item${ok.length===1?"":"s"}${wl?` and ${wl.length} wish${wl.length===1?"":"es"}`:""}.`);
   }catch(err){say("That file isn't a valid backup.")}};
 /* ---- barcode scanning ---- */
 let libP=null,scanner=null,busy=false;
@@ -305,7 +340,7 @@ async function lookup(code){
     if(!r.ok)return null;const d=await r.json();
     const p=d&&d.status===1&&d.product,n=p&&String(p.product_name||p.generic_name||"").trim();
     if(!n)return null;const t=(p.categories_tags||[]).join(" ");
-    const cat=/alcoholic|wines|beers|spirits|whisk|vodka|beverages|drinks|juices|sodas/.test(t)?"Alcohol & drinks":/chocolate|confection|candies|sweet|biscuits|cookies|desserts|cakes/.test(t)?"Treats":/snack|chips|crisps|nuts|crackers|popcorn/.test(t)?"Snacks":null;
+    const cat=/alcoholic|wines|beers|spirits|whisk|vodka|beverages|drinks|juices|sodas/.test(t)?"Alcohol & drinks":/dessert|pudding|cake|pies|trifle|ice-cream|mousse/.test(t)?"Desserts":/chocolate|confection|candies|sweet|biscuits|cookies/.test(t)?"Treats":/snack|chips|crisps|nuts|crackers|popcorn/.test(t)?"Snacks":null;
     return{name:n,cat}}catch(e){return null}}
 const stat=t=>{$("mstat").textContent=t};
 async function closeScan(){
